@@ -66,21 +66,11 @@ final class KbHelper : NSViewController, ObservableObject {
         let modifiers = event.modifierFlags
         let kbCombo = KbCombo(keyCode: keyCode, modifiers: modifiers )
         //A valid combination will always have a callback entry
+        // since supplying no callback will associate an empty function.
         if let callback = kbCallbacks[kbCombo]  {
             keyPress = event  // Set combine publisher
             callback(event)
         }
-    }
-    //override func flagsChanged(with event: NSEvent) {
-     //   modifierCode = event.keyCode
-    //}
-
-    init() { //nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 
     func viewDidAppear(_ animated: Bool) {

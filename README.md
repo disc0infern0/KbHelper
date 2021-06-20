@@ -13,23 +13,26 @@ can be used if preferred
 ##  Registration : kb.register()
  To register keystrokes directly in your view, you should call the register method in a .onAppear block. More typically, registration is done in a viewmodel by passing the kb object to a registration method in your viewmodel.
  ## Parameters:
-     _ keystroke : [kbKey]               // Array of kbKey. Mandatory
-     modifiers : [kbModifier]=[]     // Array of kbModifer. May be omitted.  Example usage:  modifers:  [.command, .shift, .alternate, .control ]
-     _ callback: @escaping (kbKey)-> Void = {_ in return}       // Callback function. May be omitted.  A callback function, if specified,  must accept a kbKey as the first (unnamed) parameter. Often the kbKey.descrption() will be useful which will return the matched character prefixed with any matched modifiers,
-     e.g .<Option>p,
-     Alternatively, access  kbKey.characters to return the single matched character.
+     [kbKey]            // e.g [.keyboardW, .keyboardF1]
+     [kbModifier]?      // e.g. [.command, .shift, .option, .control ]
+     ((_ KbKey)-> Void)?  // Function to call when keypress detected.
+                        // A callback function, if specified,  must accept a KbKey as the first (unnamed) parameter. Often the KbKey.descrption() will be useful which will return a string of the matched character prefixed with any matched modifiers. e.g "<Shift>N"
+                        // Alternatively, access  kbKey.characters to return the single matched character.
      
  ## Example usage:
  ```swift
- kb.register([.keyboardA, .keyboardD], move)   // will call a move(key: kbKey) function when A or D is pressed
- kb.register(.keyboardM, modifiers: [.command], menu)  // Register Command-M to invoke the menu(key: kbKey) method
+ // call move(key: kbKey) when A or D is pressed
+ kb.register([.keyboardA, .keyboardD], move)   
+ 
+ // Register Command-M to invoke the menu(key: kbKey) method
+ kb.register(.keyboardM, modifiers: [.command], menu)  
 ```
 
  If callback is omitted, you can still access registered keypresses via the kb.$keyPress Publisher, which emits values of type kbKey.
 
 
  ## ToDo:
- Input error checking in register
+ Input error checking for string arguments in register( undocumented feature )
  Override Menu items for registered keys, e.g. <Commnd>M always minimises the window, even if set to be recognised
 
  ## Example view model :
