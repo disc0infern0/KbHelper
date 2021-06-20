@@ -32,7 +32,7 @@ can be used if preferred
 
 
  ## ToDo:
- Input error checking for string arguments in register( undocumented feature )
+ Input error checking for string arguments in register( undocumented feature; register("<Option>S"))
  Override Menu items for registered keys, e.g. <Commnd>M always minimises the window, even if set to be recognised
 
  ## Example view model :
