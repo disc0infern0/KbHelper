@@ -15,7 +15,7 @@ public typealias KbModifiers = NSEvent.ModifierFlags  // [.capsLock,.shift,.cont
 
 
 #if !os(macOS)
-final class KbHelper : UIViewController, ObservableObject {
+public class KbHelper : UIViewController, ObservableObject {
 
     public private(set) var text = "Hello, World!"
 
@@ -53,7 +53,7 @@ final class KbHelper : UIViewController, ObservableObject {
 }
 #else
 //macOS
-final class KbHelper : NSViewController, ObservableObject {
+public class KbHelper : NSViewController, ObservableObject {
     public private(set) var text = "Hello, World!" // For the glorious test suite
 
     var acceptsFirstReponsder: Bool { return true }
@@ -73,7 +73,7 @@ final class KbHelper : NSViewController, ObservableObject {
     ///   - presses: Set of UIPress. The key member is of main interest, as it contains the character representation (key.characters)
     ///   - event: Ignored except for passing back to super.init if the keypress was not recognised
     ///
-    override func keyDown(with event: KbKey)
+    public override func keyDown(with event: KbKey)
     {
         let keyCode = KbKeyCode(rawValue: event.keyCode) ?? KbKeyCode.empty
         let modifiers = event.modifierFlags
@@ -101,7 +101,7 @@ extension KbHelper {
     ///   - keystroke: Single character string that is of interest to the invoker
     ///   - callback: Handling function to be called. The function should accept a String parameter which will contain the keypress detected
     ///
-    func kbRegister(_ keyCodes : [KbKeyCode],
+    public func kbRegister(_ keyCodes : [KbKeyCode],
                            modifiers: KbModifiers = [],
                            _ callback: @escaping (KbKey) -> Void = {_  in return }) {
         for keyCode in keyCodes {
@@ -234,13 +234,13 @@ public extension View {
 
 #if !os(macOS)
 /// Transform the main class, which inherits from UIViewController, into a SwiftUI view
-fileprivate extension KbHelper {
+public extension KbHelper {
     @available(iOS 13, *)
-    private struct kbView: UIViewControllerRepresentable {
+    struct kbView: UIViewControllerRepresentable {
         var kbHc: KbHelper
 
-        func makeUIViewController(context: Context) -> KbHelper { kbHc }
-        func updateUIViewController(_ kbHc: KbHelper, context: Context) {  } //No-op
+        public func makeUIViewController(context: Context) -> KbHelper { kbHc }
+        public func updateUIViewController(_ kbHc: KbHelper, context: Context) {  } //No-op
     }
     /// .asView() is a convenience initialiser for the SwiftUI view
     @available(iOS 13, *)
@@ -249,15 +249,15 @@ fileprivate extension KbHelper {
     }
 }
 #else
-fileprivate extension KbHelper {
+public extension KbHelper {
     @available(iOS 13, *)
-    private struct kbView: NSViewControllerRepresentable {
-        typealias NSViewControllerType = KbHelper
+    struct kbView: NSViewControllerRepresentable {
+        public typealias NSViewControllerType = KbHelper
 
         var kbHc: KbHelper
 
-        func makeNSViewController(context: Context) -> KbHelper { kbHc }
-        func updateNSViewController(_ kbHc: KbHelper, context: Context) {  } //No-op
+        public func makeNSViewController(context: Context) -> KbHelper { kbHc }
+        public func updateNSViewController(_ kbHc: KbHelper, context: Context) {  } //No-op
     }
     /// .asView() is a convenience initialiser for the SwiftUI view
     @available(iOS 13, *)
@@ -756,4 +756,3 @@ extension KbKeyCode {
  public static let paste = Self(0x7d)
  public static let find = Self(0x7e)
 */
-
