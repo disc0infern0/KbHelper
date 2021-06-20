@@ -59,7 +59,8 @@ final class KbHelper : NSViewController, ObservableObject {
     /// - Parameters:
     ///   - presses: Set of UIPress. The key member is of main interest, as it contains the character representation (key.characters)
     ///   - event: Ignored except for passing back to super.init if the keypress was not recognised
-    override func keyDown(with event: NSEvent)
+    ///
+    override func keyDown(with event: KbKey)
     {
         let keyCode = KbKeyCode(rawValue: event.keyCode) ?? KbKeyCode.empty
         let modifiers = event.modifierFlags

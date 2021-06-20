@@ -296,7 +296,10 @@ public enum KbKeyCode : UInt16, Hashable {
     case media_coffee = 0xF9
     case media_refresh = 0xFA
     case media_calc = 0xFB //251
+}
+#endif
 
+extension KbKeyCode {
     static let functionKeys: Set<Self> = [
         .keyboardF1,
         .keyboardF2,
@@ -328,7 +331,6 @@ public enum KbKeyCode : UInt16, Hashable {
     var isFunctionKey: Bool { Self.functionKeys.contains(self) }
 
 }
-#endif
 
 /*
 struct KeyCode : Hashable {
