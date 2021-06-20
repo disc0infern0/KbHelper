@@ -1,15 +1,10 @@
 import SwiftUI
 
-public struct KbHelper {
-    public private(set) var text = "Hello, World!"
-
-    public init() {
-    }
-}
 
 #if !os(macOS)
-final class KbHc : UIViewController, ObservableObject {
+final class KbHelper : UIViewController, ObservableObject {
 
+    public private(set) var text = "Hello, World!"
 
     var canBecomeFirstReponsder: Bool { return true }
     let focusable:Bool = false
@@ -45,7 +40,9 @@ final class KbHc : UIViewController, ObservableObject {
 }
 #else
 //macOS
-final class KbHc : NSViewController, ObservableObject {
+final class KbHelper : NSViewController, ObservableObject {
+    public private(set) var text = "Hello, World!" // For the glorious test suite
+
     var acceptsFirstReponsder: Bool { return true }
     let focusable:Bool = false
 
@@ -92,7 +89,7 @@ final class KbHc : NSViewController, ObservableObject {
 #endif
 
 
-extension KbHc {
+extension KbHelper {
 
 
     /// func register:
@@ -228,20 +225,20 @@ fileprivate extension String {
 /// This is the only way to instantiate the keyboard controller
 public extension View {
     func kb() -> some View {
-        @ObservedObject var kb = KbHc()
+        @ObservedObject var kb = KbHelper()
         return self.environmentObject(kb).background(kb.asView())
     }
 }
 
 #if !os(macOS)
 /// Transform the main class, which inherits from UIViewController, into a SwiftUI view
-fileprivate extension KbHc {
+fileprivate extension KbHelper {
     @available(iOS 13, *)
     private struct kbView: UIViewControllerRepresentable {
-        var kbHc: KbHc
+        var kbHc: KbHelper
 
-        func makeUIViewController(context: Context) -> KbHc { kbHc }
-        func updateUIViewController(_ kbHc: KbHc, context: Context) {  } //No-op
+        func makeUIViewController(context: Context) -> KbHelper { kbHc }
+        func updateUIViewController(_ kbHc: KbHelper, context: Context) {  } //No-op
     }
     /// .asView() is a convenience initialiser for the SwiftUI view
     @available(iOS 13, *)
@@ -250,15 +247,15 @@ fileprivate extension KbHc {
     }
 }
 #else
-fileprivate extension KbHc {
+fileprivate extension KbHelper {
     @available(iOS 13, *)
     private struct kbView: NSViewControllerRepresentable {
-        typealias NSViewControllerType = KbHc
+        typealias NSViewControllerType = KbHelper
 
-        var kbHc: KbHc
+        var kbHc: KbHelper
 
-        func makeNSViewController(context: Context) -> KbHc { kbHc }
-        func updateNSViewController(_ kbHc: KbHc, context: Context) {  } //No-op
+        func makeNSViewController(context: Context) -> KbHelper { kbHc }
+        func updateNSViewController(_ kbHc: KbHelper, context: Context) {  } //No-op
     }
     /// .asView() is a convenience initialiser for the SwiftUI view
     @available(iOS 13, *)
