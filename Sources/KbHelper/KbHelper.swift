@@ -89,6 +89,14 @@ public class KbHelper : NSViewController, ObservableObject {
     func viewDidAppear(_ animated: Bool) {
         becomeFirstResponder()
     }
+
+    public override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
 #endif
 
@@ -227,7 +235,7 @@ fileprivate extension String {
 /// This is the only way to instantiate the keyboard controller
 public extension View {
     func kb() -> some View {
-        @ObservedObject var kb = KbHelper()
+        @ObservedObject var kb : KbHelper = KbHelper()
         return self.environmentObject(kb).background(kb.asView())
     }
 }
