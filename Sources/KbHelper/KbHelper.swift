@@ -91,9 +91,10 @@ public class KbHelper : NSViewController, ObservableObject {
     }
 
     public override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nil, bundle: nil)
+        let bundle : Bundle = nibBundleOrNil ?? Bundle.main
+        super.init(nibName: nibNameOrNil, bundle: bundle)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
