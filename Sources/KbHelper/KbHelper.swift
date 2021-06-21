@@ -27,7 +27,7 @@ public class KbHelper : UIViewController, ObservableObject {
 
     /// keyPress:
     /// Description: Combine publisher for matched keypress
-    @Published var keyPress = KbKey() //? //= UIKey() //undocumented initialiser
+    @Published public var keyPress = KbKey()   // dummy initialiser
 
     /// func pressesBegan
     /// Detect keyboard presses, trigger publisher for registered keyboard presses, and optionally call the callback handler if one was specified.
@@ -65,7 +65,7 @@ public class KbHelper : NSViewController, ObservableObject {
 
     /// keyPress:
     /// Description: Combine publisher for matched keypress
-    @Published var keyPress = KbKey() //? //= UIKey() //undocumented initialiser
+    @Published public var keyPress = KbKey() //undocumented initialiser
 
     /// func pressesBegan
     /// Detect keyboard presses, trigger publisher for registered keyboard presses, and optionally call the callback handler if one was specified.
