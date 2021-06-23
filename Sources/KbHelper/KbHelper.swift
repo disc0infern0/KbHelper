@@ -53,10 +53,11 @@ public class KbHelper : UIViewController, ObservableObject {
 }
 #else
 //macOS
-public class KbHelper : NSViewController, ObservableObject {
+public class KbHelper : NSView, ObservableObject {
     public private(set) var text = "Hello, World!" // For the glorious test suite
 
-    var acceptsFirstReponsder: Bool { return true }
+    public override var acceptsFirstResponder : Bool { return true }
+
     let focusable:Bool = false
 
     /// kbCallbacks:
@@ -83,21 +84,27 @@ public class KbHelper : NSViewController, ObservableObject {
         if let callback = kbCallbacks[kbCombo]  {
             keyPress = event  // Set combine publisher
             callback(event)
+        } else {
+            super.keyDown(with: event)
         }
     }
 
-    func viewDidAppear(_ animated: Bool) {
-        becomeFirstResponder()
+    init() {
+        super.init(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
+        self.becomeFirstResponder()
     }
 
-    public override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
-        let bundle : Bundle = nibBundleOrNil ?? Bundle.main
-        super.init(nibName: nibNameOrNil, bundle: bundle)
+    override init(frame frameRect: NSRect) {
+        fatalError("init(frame:) not implemented")
     }
-
-    required init?(coder: NSCoder) {
+    @objc required dynamic init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
+//    func viewDidAppear(_ animated: Bool) {
+//        becomeFirstResponder()
+//    }
+
 }
 #endif
 
@@ -244,7 +251,6 @@ public extension View {
 #if !os(macOS)
 /// Transform the main class, which inherits from UIViewController, into a SwiftUI view
 public extension KbHelper {
-    @available(iOS 13, *)
     struct kbView: UIViewControllerRepresentable {
         var kbHc: KbHelper
 
@@ -259,14 +265,11 @@ public extension KbHelper {
 }
 #else
 public extension KbHelper {
-    @available(iOS 13, *)
-    struct kbView: NSViewControllerRepresentable {
-        public typealias NSViewControllerType = KbHelper
-
+    struct kbView: NSViewRepresentable {
         var kbHc: KbHelper
 
-        public func makeNSViewController(context: Context) -> KbHelper { kbHc }
-        public func updateNSViewController(_ kbHc: KbHelper, context: Context) {  } //No-op
+        public func makeNSView(context: Context) -> KbHelper { kbHc }
+        public func updateNSView(_ kbHc: KbHelper, context: Context) {  } //No-op
     }
     /// .asView() is a convenience initialiser for the SwiftUI view
     @available(iOS 13, *)
