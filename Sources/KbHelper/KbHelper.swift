@@ -58,8 +58,6 @@ public class KbHelper : NSView, ObservableObject {
 
     public override var acceptsFirstResponder : Bool { return true }
 
-    let focusable:Bool = false
-
     /// kbCallbacks:
     /// Description: Stores the callback to be invoked when a keyboard combo(keypress and modifier) are recognised
     fileprivate var kbCallbacks : [KbCombo: (KbKey)->Void] = [:]
@@ -76,6 +74,8 @@ public class KbHelper : NSView, ObservableObject {
     ///
     public override func keyDown(with event: KbKey)
     {
+        let found = event.charactersIgnoringModifiers ?? "Nothing in characters"
+        print("Keypress found: <\(found)>")
         let keyCode = KbKeyCode(rawValue: event.keyCode) ?? KbKeyCode.empty
         let modifiers = event.modifierFlags
         let kbCombo = KbCombo(keyCode: keyCode, modifiers: modifiers )
@@ -85,6 +85,7 @@ public class KbHelper : NSView, ObservableObject {
             keyPress = event  // Set combine publisher
             callback(event)
         } else {
+            print("no match")
             super.keyDown(with: event)
         }
     }
@@ -101,9 +102,9 @@ public class KbHelper : NSView, ObservableObject {
         fatalError("init(coder:) has not been implemented")
     }
 
-//    func viewDidAppear(_ animated: Bool) {
-//        becomeFirstResponder()
-//    }
+    func viewDidAppear(_ animated: Bool) {
+        becomeFirstResponder()
+    }
 
 }
 #endif
@@ -121,7 +122,7 @@ extension KbHelper {
                            modifiers: KbModifiers = [],
                            _ callback: @escaping (KbKey) -> Void = {_  in return }) {
         for keyCode in keyCodes {
-            print("you registered \(modifiers.description())"+"(keyCode.description()) ")
+            print("you registered \(modifiers.description())"+"\(keyCode.description()) ")
             _register(keyCode: keyCode, modifiers: modifiers, callback: callback)
         }
     }
