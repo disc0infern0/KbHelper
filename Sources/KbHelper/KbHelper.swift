@@ -8,6 +8,7 @@ public typealias KbModifiers = UIKeyModifierFlags  // [.alphaShift,.shift,.contr
 
 #else
 import AppKit
+import Carbon.HIToolbox
 public typealias KbKey = NSEvent
 // type KbKeyCode defined for macOS below
 public typealias KbModifiers = NSEvent.ModifierFlags  // [.capsLock,.shift,.control,.option,.command,.numericPad ]
@@ -29,6 +30,24 @@ public class KbHelper : UIViewController, ObservableObject {
     /// Description: Combine publisher for matched keypress
     @Published public var keyPress = KbKey()   // dummy initialiser
 
+    func checkIfTakenByMenu() -> NSMenuItem? {
+        let menu = NSApp.mainMenu
+        for item in menu.items {
+            if  keyToCharacter() == item.keyEquivalent,
+                modifiers == item.keyEquivalentModifierMask
+            {
+                return item
+            }
+
+            if  let submenu = item.submenu,
+                let menuItem = menuItemWithMatchingShortcut(in: submenu)
+            {
+                return menuItem
+            }
+        }
+
+        return nil
+    }
     /// func pressesBegan
     /// Detect keyboard presses, trigger publisher for registered keyboard presses, and optionally call the callback handler if one was specified.
     /// - Parameters:
@@ -55,7 +74,6 @@ public class KbHelper : UIViewController, ObservableObject {
 //macOS
 public class KbHelper : NSView, ObservableObject {
     public private(set) var text = "Hello, World!" // For the glorious test suite
-
     public override var acceptsFirstResponder : Bool { return true }
 
     /// kbCallbacks:
@@ -75,8 +93,9 @@ public class KbHelper : NSView, ObservableObject {
     public override func keyDown(with event: KbKey)
     {
         let found = event.charactersIgnoringModifiers ?? "Nothing in characters"
-        print("Keypress found: <\(found)>")
+        print("Keypress found: <\(found)> \(event.keyCode))")
         let keyCode = KbKeyCode(rawValue: event.keyCode) ?? KbKeyCode.empty
+        print("which matched to \(keyCode.description()) with raw= \(keyCode.rawValue)")
         let modifiers = event.modifierFlags
         let kbCombo = KbCombo(keyCode: keyCode, modifiers: modifiers )
         //A valid combination will always have a callback entry
@@ -86,6 +105,12 @@ public class KbHelper : NSView, ObservableObject {
             callback(event)
         } else {
             print("no match")
+            print("Registered callbacks are :-")
+            for combo in kbCallbacks {
+                let code = combo.key.keyCode.description()
+                let mod = combo.key.modifiers.description()
+                print("\(code)+\(mod)")
+            }
             super.keyDown(with: event)
         }
     }
@@ -122,7 +147,7 @@ extension KbHelper {
                            modifiers: KbModifiers = [],
                            _ callback: @escaping (KbKey) -> Void = {_  in return }) {
         for keyCode in keyCodes {
-            print("you registered \(modifiers.description())"+"\(keyCode.description()) ")
+            print("you registered \(keyCode.description()) raw= \(keyCode.rawValue) ")
             _register(keyCode: keyCode, modifiers: modifiers, callback: callback)
         }
     }
@@ -172,12 +197,12 @@ extension KbKey {
 
 extension KbKeyCode {
     func description(_ modifiers:KbModifiers=[]) -> String {
-        //Sadly there appears to be no built in method for initialising a UIKey from a raw value
+        //Sadly there appears to be no built in method for initialising a Key from a raw value
         // so here we are.
         // (The UIKey initialiser is undocumented, but appears to be based on NSCoder.. eugh )
         let cfIndex = Int(self.rawValue)
         switch (cfIndex) {
-            case 0: return ""               // UIKey().keyCode is initialised with 0. i.e. nothing
+            case 0: return ""               // Key().keyCode is initialised with 0. i.e. nothing
             case 4...29 :                   // .keyboarda...z
                 //Check if the OptionSet includes either CapsLock or Shift
                 //if !(modifiers.intersection([.shift,.alphaShift]).isEmpty) {
@@ -189,47 +214,47 @@ extension KbKeyCode {
                 return "\(cfIndex-29)"
             case 39: return "0"             // .keyboard0
             case 41: return "Esc"           // .keyboardEscape
-            case 43: return "Tab"           // .keyboardTab
-            case 44: return " "             // .keyboardSpacebar
+            case 43: return "⇥"             // .keyboardTab
+            case 44: return "⎵"             // .keyboardSpacebar
             case 45: return "-"             // .keyboardHyphen
             case 46: return "="             // .keyboardEqualSign
             case 54: return ","             // .keyboardComma
             case 55: return "."             // .keyboardPeriod
             case 56: return "/"             // .keyboardSlash
-            case 57: return "CapsLock"      // .keyboardCapsLock
+            case 57: return "⇪"             // .keyboardCapsLock
             case 58...69:                   // .keyboardF1..12
                 return "F\(cfIndex-57)"
-            case 72: return "Pause"         // .keyboardPause
-            case 73: return "Insert"        // .keyboardInsert
-            case 74: return "Home"          // .keyboardHome
-            case 75: return "PageUp"        // .keyboardPageUp
-            case 76: return "DeleteForward" // .keyboardDeleteForward
-            case 77: return "End"           // .keyboardEnd
-            case 78: return "PageDown"      // .keyboardPageDown
-            case 79 : return "RightArrow"   // .keyboardRightArrow
-            case 80: return "LeftArrow"     // .keyboardLeftArrow
-            case 81: return "DownArrow"     // .keyboardDownArrow
-            case 82: return "UpArrow"       // .keyboardUpArrow
+            case 72: return "⏸"            // .keyboardPause
+            case 73: return "⎀"        // .keyboardInsert
+            case 74: return "↖"             // .keyboardHome
+            case 75: return "⌅"             // .keyboardPageUp
+            case 76: return "⌦"             // .keyboardDeleteForward
+            case 77: return "↘"             // .keyboardEnd
+            case 78: return "⍖"             // .keyboardPageDown
+            case 79 : return "→"            // .keyboardRightArrow
+            case 80: return "←"             // .keyboardLeftArrow
+            case 81: return "↓"             // .keyboardDownArrow
+            case 82: return "↑"             // .keyboardUpArrow
             case 89...97:                   // .keypad1...9
                 return "\(cfIndex-88)"
             case 98:                        // .keypad0 or Insert
                 if modifiers.contains(.numericPad) {
                     return "0"
                 } else {
-                    return "Insert"
+                    return "⎀"
                 }
             case 104...115:                 // .keyboardF13...F24
                 return "F\(cfIndex-91)"
-            case 117: return "Help"         // .keyboardHelp
+            case 117: return "?⃝"         // .keyboardHelp
             case 118: return "Menu"         // .keyboardMenu
             case 119: return "Select"       // .keyboardSelect
-            case 127: return "Mute"         // .keyboardMute
-            case 128: return "VolumeUp"     // .keyboardVolumeUp
-            case 129: return "VolumeDown"   // .keyboardVolumeDown
-            case 224: return "LeftControl"     // .keyboardLeftControl
-            case 225: return "LeftShift"       // .keyboardLeftShift
-            case 226: return "LeftOption"      // .keyboardLeftAlt
-            case 227: return "LeftCMD"      // .keyboardLeftGUI
+            case 127: return "🔇"         // .keyboardMute
+            case 128: return "🔊"     // .keyboardVolumeUp
+            case 129: return "🔉"   // .keyboardVolumeDown
+            case 224: return "⌃"     // .keyboardLeftControl
+            case 225: return "⇧"       // .keyboardLeftShift
+            case 226: return "⌥"      // .keyboardLeftAlt
+            case 227: return "⌘"      // .keyboardLeftGUI
             default : return "Undecoded \(cfIndex)"
         }
     }
@@ -317,6 +342,7 @@ fileprivate func translate(input : String) -> KbKeyCode {
         case "A":   keyCode = .keyboardA
         case "B":   keyCode = .keyboardB
         case "C":   keyCode = .keyboardC
+/*
         case "D":   keyCode = .keyboardD
         case "E":   keyCode = .keyboardE
         case "F":   keyCode = .keyboardF
@@ -350,6 +376,7 @@ fileprivate func translate(input : String) -> KbKeyCode {
         case "7":   keyCode = .keyboard7
         case "8":   keyCode = .keyboard8
         case "9":   keyCode = .keyboard9
+*/
         case "F1":  keyCode = .keyboardF1
         case "F2":  keyCode = .keyboardF2
         case "F3":  keyCode = .keyboardF3
@@ -362,6 +389,7 @@ fileprivate func translate(input : String) -> KbKeyCode {
         case "F10": keyCode = .keyboardF10
         case "F11": keyCode = .keyboardF11
         case "F12": keyCode = .keyboardF12
+            /*
         case "F13": keyCode = .keyboardF13
         case "F14": keyCode = .keyboardF14
         case "F15": keyCode = .keyboardF15
@@ -404,6 +432,7 @@ fileprivate func translate(input : String) -> KbKeyCode {
         case "LeftShift"     : keyCode = .keyboardLeftShift
         case "LeftOption"    : keyCode = KbKeyCode(rawValue: 226)! //.keyboardLeftOption
         case "LeftCommand"   : keyCode = KbKeyCode(rawValue: 227)! //.keyboardLeftCMD
+*/
         default :
             fatalError("\(input) not recongnised")
     }
@@ -435,39 +464,39 @@ public extension KbModifiers {
 #if os(macOS)
 public enum KbKeyCode : UInt16, Hashable {
 
-    case empty = 0
-    case keyboardErrorRollOver = 1 /* ErrorRollOver */
-    case keyboardPOSTFail = 2 /* POSTFail */
-    case keyboardErrorUndefined = 3 /* ErrorUndefined */
+    case empty = 65535
+    //case keyboardErrorRollOver = 1 /* ErrorRollOver */
+    //case keyboardPOSTFail = 2 /* POSTFail */
+    //case keyboardErrorUndefined = 3 /* ErrorUndefined */
 
     // Letters
-    case keyboardA = 4 /* a or A */
-    case keyboardB = 5 /* b or B */
-    case keyboardC = 6 /* c or C */
-    case keyboardD = 7 /* d or D */
-    case keyboardE = 8 /* e or E */
-    case keyboardF = 9 /* f or F */
-    case keyboardG = 10 /* g or G */
-    case keyboardH = 11 /* h or H */
-    case keyboardI = 12 /* i or I */
-    case keyboardJ = 13 /* j or J */
-    case keyboardK = 14 /* k or K */
-    case keyboardL = 15 /* l or L */
-    case keyboardM = 16 /* m or M */
-    case keyboardN = 17 /* n or N */
-    case keyboardO = 18 /* o or O */
-    case keyboardP = 19 /* p or P */
-    case keyboardQ = 20 /* q or Q */
-    case keyboardR = 21 /* r or R */
-    case keyboardS = 22 /* s or S */
-    case keyboardT = 23 /* t or T */
-    case keyboardU = 24 /* u or U */
-    case keyboardV = 25 /* v or V */
-    case keyboardW = 26 /* w or W */
-    case keyboardX = 27 /* x or X */
-    case keyboardY = 28 /* y or Y */
-    case keyboardZ = 29 /* z or Z */
-
+    case keyboardA = 0 // 4 /* a or A */
+    case keyboardB = 11 /* b or B */
+    case keyboardC = 8 /* c or C */
+    case keyboardD = 2 /* d or D */
+    case keyboardE = 14 /* e or E */
+    case keyboardF = 3 /* f or F */
+    case keyboardG = 5 /* g or G */
+    case keyboardH = 4 /* h or H */
+    case keyboardI = 34 /* i or I */
+    case keyboardJ = 38 /* j or J */
+    case keyboardK = 40 /* k or K */
+    case keyboardL = 37 /* l or L */
+    case keyboardM = 46 /* m or M */
+    case keyboardN = 45 /* n or N */
+    case keyboardO = 31 /* o or O */
+    case keyboardP = 35 /* p or P */
+    case keyboardQ = 12 /* q or Q */
+    case keyboardR = 15 /* r or R */
+    case keyboardS = 1  /* s or S */
+    case keyboardT = 17 /* t or T */
+    case keyboardU = 32 /* u or U */
+    case keyboardV = 9 /* v or V */
+    case keyboardW = 13 /* w or W */
+    case keyboardX = 7 /* x or X */
+    case keyboardY = 16 /* y or Y */
+    case keyboardZ = 6 /* z or Z */
+/*
     // Numbers
     case keyboard1 = 30 /* 1 or ! */
     case keyboard2 = 31 /* 2 or @ */
@@ -506,21 +535,21 @@ public enum KbKeyCode : UInt16, Hashable {
     case keyboardCapsLock = 57 /* Caps Lock ***************/
     case keypadNumLock = 83 /* Keypad NumLock or Clear ***********/
 
-
+*/
     /* Function keys */
-    case keyboardF1  = 58 /* F1 */
-    case keyboardF2  = 59 /* F2 */
-    case keyboardF3  = 60 /* F3 */
-    case keyboardF4  = 61 /* F4 */
-    case keyboardF5  = 62 /* F5 */
-    case keyboardF6  = 63 /* F6 */
-    case keyboardF7  = 64 /* F7 */
-    case keyboardF8  = 65 /* F8 */
-    case keyboardF9  = 66 /* F9 */
-    case keyboardF10 = 67 /* F10 */
-    case keyboardF11 = 68 /* F11 */
-    case keyboardF12 = 69 /* F12 */
-
+    case keyboardF1  = 122 /* F1 */
+    case keyboardF2  = 120 /* F2 */
+    case keyboardF3  = 99 /* F3 */
+    case keyboardF4  = 118 /* F4 */
+    case keyboardF5  = 96 /* F5 */
+    case keyboardF6  = 97 /* F6 */
+    case keyboardF7  = 98 /* F7 */
+    case keyboardF8  = 100 /* F8 */
+    case keyboardF9  = 101 /* F9 */
+    case keyboardF10 = 109/* F10 */
+    case keyboardF11 = 103 /* F11 */
+    case keyboardF12 = 111 /* F12 */
+/*
     // Misc
     case keyboardPrintScreen   = 70 /* Print Screen */
     case keyboardScrollLock    = 71 /* Scroll Lock */
@@ -692,6 +721,7 @@ public enum KbKeyCode : UInt16, Hashable {
     case media_coffee       = 249
     case media_refresh      = 250
     case media_calc         = 251
+     */
 }
 #endif
 
@@ -708,7 +738,8 @@ extension KbKeyCode {
         .keyboardF9,
         .keyboardF10,
         .keyboardF11,
-        .keyboardF12,
+        .keyboardF12
+        /*,
         .keyboardF13,
         .keyboardF14,
         .keyboardF15,
@@ -721,6 +752,7 @@ extension KbKeyCode {
         .keyboardF22,
         .keyboardF23,
         .keyboardF24
+         */
     ]
 
     /// Returns true if the key is a function key. For example, `F1`.
